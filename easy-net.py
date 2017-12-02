@@ -6,6 +6,7 @@ import time
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 
 
 def main(x, hidden, b, learning, test, w, e):
@@ -53,11 +54,11 @@ def main(x, hidden, b, learning, test, w, e):
         # Calculate net error
         error = [matrix.subtract(test, matrix.transpose(sig_layer2))]
 
-        if i % 1000 == 0:
-            temp = 0
-            for j in range(len(error)):
-                temp += temp + error[0][j]
-            print i, temp
+        # if i % 25000 == 0:
+        #     temp = 0
+        #     for j in range(len(error)):
+        #         temp += temp + error[0][j]
+        #     print i, temp
 
         # Delta for neuron in output layer (1 for each training data)
         deriv_sig_layer2 = matrix.derivative(sig_layer2)
@@ -89,42 +90,57 @@ def main(x, hidden, b, learning, test, w, e):
 
         synapses0 = matrix.add(synapses0, delta_w_hi)
 
-    print str(round((time.time() - start_time)/60, 2)) + " min"
-    print "done"
+    # print str(round((time.time() - start_time)/60, 2)) + " min"
+
     result = []
     for i in range(len(sig_layer2[0])):
         result.append(sig_layer2[0][i] * 2 - 1)
 
     # Plot
+    # hiddenNeurons, bias, iterations, testdata, weight, epsilon
+    # hidden, b, learning, test, w, e
+
+    neuron_patch = mpatches.Patch(label='Neurons: '+str(hidden))
+    bias_patch = mpatches.Patch(label='Bias: '+str(b))
+    iteration_patch = mpatches.Patch(label='Iterations: '+str(learning))
+    epsilon_patch = mpatches.Patch(label='Epsilon: '+str(e))
+    time_patch = mpatches.Patch(label=str(round((time.time() - start_time)/60, 2)) + " min")
+
+    plt.legend(handles=[neuron_patch, iteration_patch, epsilon_patch, time_patch], bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=2, mode="expand", borderaxespad=0.)
     plt.plot(inputData[0], result)
-    plt.savefig('plot'+str(time.time())+'.png')
-    plt.plot(inputData[0], result)
-    plt.show()
+    plt.plot(x_data, y_data)
+    plt.savefig('./plots/plot'+str(time.time())+'.png')
+
+    # plt.legend(handles=[neuron_patch, bias_patch, iteration_patch, epsilon_patch],
+    # bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=2, mode="expand", borderaxespad=0.)
+    # plt.plot(inputData[0], result)
+    # plt.show()
 
 
 # inputData = [[0, 0, 1], [0, 1, 1], [1, 0, 1], [1, 1, 1]]
 
-inputData = [tools.linspace(0., 2 * math.pi, 30)]
-
-# print inputData
+inputData = [tools.linspace(-0, 2 * 3.15, 50)]  # math.pi
 
 testdata = []
 for data in range(len(inputData[0])):
     testdata.append([(math.sin(inputData[0][data])*0.5)+0.5])
 
-# print testdata
-
 x_data = inputData[0]
 y_data = np.sin(x_data)
 
-plt.plot(x_data, y_data)
-# plt.savefig('plot.png')
 
-iterations = 50000
-hiddenNeurons = 15
-bias = 1.
-weight = 0.95
-epsilon = 0.15
+for i in range(9):
+    for j in range(10):
+        print "run i: " + str(i) + ", j: " + str(j)
 
-start_time = time.time()
-main(inputData, hiddenNeurons, bias, iterations, testdata, weight, epsilon)
+        iterations = 100000
+        hiddenNeurons = 10 + i
+        bias = 1.
+        weight = 0.95
+        epsilon = ((j + 0.1) / 10)
+
+        start_time = time.time()
+
+        main(inputData, hiddenNeurons, bias, iterations, testdata, weight, epsilon)
+
+#
