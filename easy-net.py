@@ -90,18 +90,13 @@ def main(x, hidden, b, learning, test, w, e):
 
         synapses0 = matrix.add(synapses0, delta_w_hi)
 
-    # print str(round((time.time() - start_time)/60, 2)) + " min"
-
     result = []
     for i in range(len(sig_layer2[0])):
         result.append(sig_layer2[0][i] * 2 - 1)
 
     # Plot
-    # hiddenNeurons, bias, iterations, testdata, weight, epsilon
-    # hidden, b, learning, test, w, e
-
     neuron_patch = mpatches.Patch(label='Neurons: '+str(hidden))
-    bias_patch = mpatches.Patch(label='Bias: '+str(b))
+    # bias_patch = mpatches.Patch(label='Bias: '+str(b))
     iteration_patch = mpatches.Patch(label='Iterations: '+str(learning))
     epsilon_patch = mpatches.Patch(label='Epsilon: '+str(e))
     time_patch = mpatches.Patch(label=str(round((time.time() - start_time)/60, 2)) + " min")
@@ -111,13 +106,17 @@ def main(x, hidden, b, learning, test, w, e):
     plt.plot(x_data, y_data)
     plt.savefig('./plots/plot'+str(time.time())+'.png')
 
+    plt.clf()
+    plt.cla()
+    plt.close()
+
     # plt.legend(handles=[neuron_patch, bias_patch, iteration_patch, epsilon_patch],
     # bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=2, mode="expand", borderaxespad=0.)
     # plt.plot(inputData[0], result)
     # plt.show()
 
-
 # inputData = [[0, 0, 1], [0, 1, 1], [1, 0, 1], [1, 1, 1]]
+
 
 inputData = [tools.linspace(-0, 2 * 3.15, 50)]  # math.pi
 
@@ -128,19 +127,18 @@ for data in range(len(inputData[0])):
 x_data = inputData[0]
 y_data = np.sin(x_data)
 
+iterations = 100000
+hiddenNeurons = 13
+bias = 1.
+weight = 0.95
+epsilon = 0.31
 
-for i in range(9):
-    for j in range(10):
-        print "run i: " + str(i) + ", j: " + str(j)
+for _ in range(15):
+    epsilon += 0.1
 
-        iterations = 100000
-        hiddenNeurons = 10 + i
-        bias = 1.
-        weight = 0.95
-        epsilon = ((j + 0.1) / 10)
+    print "epsilon 0 : " + str(epsilon)
 
-        start_time = time.time()
+    start_time = time.time()
 
-        main(inputData, hiddenNeurons, bias, iterations, testdata, weight, epsilon)
+    main(inputData, hiddenNeurons, bias, iterations, testdata, weight, epsilon)
 
-#
