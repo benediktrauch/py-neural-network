@@ -9,14 +9,17 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
 
-def main(x, hidden, b, learning, test, w, e):
+def main(x, hidden, b, learning, test, w, e, n_d):
     random.seed(1)
     training_data = x[:]
+    noise_data = n_d[:]
 
     # Adding bias to training data
     training_data.append([])
+    noise_data.append([])
     for _ in x[0]:
         training_data[1].append(b)
+        noise_data[1].append(b)
 
     # Random weights for synapses
     synapses0 = []
@@ -26,6 +29,8 @@ def main(x, hidden, b, learning, test, w, e):
         synapses0.append([random.uniform(w, -w), random.uniform(w, -w)])
     for j in range(hidden + 1):  # +1 for bias
         synapses1.append([random.uniform(w, -w)])
+
+    sig_layer2 = []
 
     for i in xrange(learning):
 
@@ -90,9 +95,36 @@ def main(x, hidden, b, learning, test, w, e):
 
         synapses0 = matrix.add(synapses0, delta_w_hi)
 
-    result = []
+    # Testing net with noised data
+    sig_noise = []
+    if len(n_d) > 0:
+        print "testing with noise data"
+
+        l1 = matrix.multiply(synapses0, noise_data)
+
+        # Activation level
+        sig_l1 = matrix.sig(l1)
+
+        # # Hidden Layer
+        # Adding bias to layer1
+
+        b_sig_l1 = sig_l1[:]
+
+        b_sig_l1.append([])
+
+        for _ in b_sig_l1[0]:
+            b_sig_l1[len(b_sig_l1) - 1].append(b)
+
+        l2 = matrix.multiply(matrix.transpose(synapses1), b_sig_l1)
+
+        sig_noise = matrix.sig(l2)
+
+    # formatting output for plot
+    result1 = []
+    result2 = []
     for i in range(len(sig_layer2[0])):
-        result.append(sig_layer2[0][i] * 2 - 1)
+        result1.append(sig_layer2[0][i] * 2 - 1)
+        result2.append(sig_noise[0][i] * 2 - 1)
 
     # Plot
     neuron_patch = mpatches.Patch(label='Neurons: '+str(hidden))
@@ -102,7 +134,8 @@ def main(x, hidden, b, learning, test, w, e):
     time_patch = mpatches.Patch(label=str(round((time.time() - start_time)/60, 2)) + " min")
 
     plt.legend(handles=[neuron_patch, iteration_patch, epsilon_patch, time_patch], bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=2, mode="expand", borderaxespad=0.)
-    plt.plot(inputData[0], result)
+    plt.plot(inputData[0], result1)
+    plt.plot(inputData[0], result2)
     plt.plot(x_data, y_data)
     plt.savefig('./plots/plot'+str(time.time())+'.png')
 
@@ -118,11 +151,13 @@ def main(x, hidden, b, learning, test, w, e):
 # inputData = [[0, 0, 1], [0, 1, 1], [1, 0, 1], [1, 1, 1]]
 
 
-inputData = [tools.linspace(-0, 2 * 3.15, 50)]  # math.pi
+inputData = [tools.linspace(0, 6.4, 50)]  # 2 * math.pi
 
 testdata = []
 for data in range(len(inputData[0])):
     testdata.append([(math.sin(inputData[0][data])*0.5)+0.5])
+
+noise_d = [tools.linspace(0.1, 6.5, 50)]
 
 x_data = inputData[0]
 y_data = np.sin(x_data)
@@ -134,11 +169,10 @@ weight = 0.95
 epsilon = 0.31
 
 for _ in range(15):
-    epsilon += 0.1
+    epsilon += 0.01
 
-    print "epsilon 0 : " + str(epsilon)
+    print "epsilon : " + str(epsilon)
 
     start_time = time.time()
 
-    main(inputData, hiddenNeurons, bias, iterations, testdata, weight, epsilon)
-
+    main(inputData, hiddenNeurons, bias, iterations, testdata, weight, epsilon, noise_d)
