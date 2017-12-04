@@ -57,9 +57,14 @@ def derivative(matrix):
     return result
 
 
-# Subtract two matrices
-def subtract(matrix1, matrix2):
+# Subtract two matrices optimized for sin
+def subtract_sin(matrix1, matrix2):
     result = []
+
+    print len(matrix1), len(matrix1[0])
+    print matrix1
+    print len(matrix2), len(matrix2[0])
+    print matrix2
 
     if len(matrix2) != len(matrix1):
         return "error"
@@ -69,6 +74,21 @@ def subtract(matrix1, matrix2):
             for j in range(len(matrix1[0])):
                 result.append(matrix1[i][j]-matrix2[i][j])
         return result
+
+
+# Subtract two matrices (edited for XOR)
+def subtract(matrix1, matrix2):
+    result = []
+    temp = []
+
+    if len(matrix1) == 1:
+        for _ in range(len(matrix2) - 1):
+            matrix1.append(matrix1[0])
+
+    for i in range(len(matrix1)):
+        for j in range(len(matrix1[0])):
+            result.append(matrix1[i][j] - matrix2[i][j])
+    return result
 
 
 # Add two matrices
@@ -92,6 +112,11 @@ def multiply(matrix1, matrix2):
     elements = []
     element = 0
     result = []
+
+    # print len(matrix1), len(matrix1[0])
+    # print matrix1
+    # print len(matrix2), len(matrix2[0])
+    # print matrix2
 
     if len(matrix2) != len(matrix1[0]):
         return "error"
