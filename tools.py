@@ -13,6 +13,6 @@ def linspace(start, end, stops):
     arr = []
     while i < end:
         # yield i
-        arr.append(i)
+        arr.append(round(i, 8))
         i += steps
     return arr

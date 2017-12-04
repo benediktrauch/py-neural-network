@@ -123,7 +123,7 @@ def main(x, hidden, b, learning, test, w, g, n_d):
             else:
                 loading_message = "Ok, I'm halfway through "
 
-# Testing net with noised data
+            # Testing net with noised data
     sig_noise = []
     if len(n_d) > 0:
         # print "testing with noise data"
@@ -152,43 +152,50 @@ def main(x, hidden, b, learning, test, w, g, n_d):
 
     # Plot
     # Some code lines from: https://matplotlib.org/users/legend_guide.html
-    neuron_patch = mpatches.Patch(label='Neurons: '+str(hidden))
-    bias_patch = mpatches.Patch(label='Bias: '+str(b))
-    iteration_patch = mpatches.Patch(label='Iterations: '+str(learning))
-    epsilon_patch = mpatches.Patch(label='Epsilon: '+str(g))
-    weight_patch = mpatches.Patch(label='Weight range (0 +/-): '+str(w))
-    time_patch = mpatches.Patch(label=str(round((time.time() - start_time)/60, 2)) + " min")
-    first_legend = plt.legend(handles=[bias_patch, time_patch, epsilon_patch, neuron_patch, iteration_patch, weight_patch],
-                              bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
-                              ncol=3, mode="expand", borderaxespad=0.)
+    neuron_patch = mpatches.Patch(label='Neurons: ' + str(hidden))
+    bias_patch = mpatches.Patch(label='Bias: ' + str(b))
+    iteration_patch = mpatches.Patch(label='Iterations: ' + str(learning))
+    epsilon_patch = mpatches.Patch(label='Epsilon: ' + str(g))
+    weight_patch = mpatches.Patch(label='Weight range (0 +/-): ' + str(w))
+    time_patch = mpatches.Patch(label=str(round((time.time() - start_time) / 60, 2)) + " min")
+    first_legend = plt.legend(
+        handles=[bias_patch, time_patch, epsilon_patch, neuron_patch, iteration_patch, weight_patch],
+        bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
+        ncol=3, mode="expand", borderaxespad=0.)
 
     line1, = plt.plot(inputData[0], result1, label="Training Data", linewidth=0.75)
     line2, = plt.plot(inputData[0], result2, label="Test Data", linestyle=':', linewidth=0.75)
     line3, = plt.plot(x_data, y_data, label="sin(x)", linestyle='--', linewidth=0.75)
     ax = plt.gca().add_artist(first_legend)
     plt.legend(handles=[line1, line2, line3])
-    plt.savefig('./plots/plot'+str(time.time())[2:10]+'.png')
+    plt.savefig('./plots/plot' + str(time.time())[2:10] + '.png')
 
     plt.clf()
     plt.cla()
     plt.close()
 
 
-# inputData = [[0, 0, 1], [0, 1, 1], [1, 0, 1], [1, 1, 1]]
-
+inputData_xor = [[0, 0, 1], [0, 1, 1], [1, 0, 1], [1, 1, 1]]
+testdata_xor = [[0], [1], [1], [0]]
 
 inputData = [tools.linspace(0, 6.4, 50)]  # 2 * math.pi
 
 testdata = []
 for data in range(len(inputData[0])):
-    testdata.append([(math.sin(inputData[0][data])*0.5)+0.5])
+    testdata.append([round((math.sin(inputData[0][data]) * 0.5) + 0.5, 8)])
+
+# print inputData
+# print inputData_xor
+#
+# print testdata
+# print testdata_xor
 
 noise_d = [tools.linspace(0.1, 6.5, 50)]
 
 x_data = inputData[0]
 y_data = np.sin(x_data)
 
-iterations = 250
+iterations = 10000
 hiddenNeurons = 9
 bias = 1.
 weight = 0.95
@@ -201,16 +208,16 @@ for _ in range(1):
 
     t = threading.Thread(target=animate)
     t.start()
+
     # epsilon += 0.01
     # print "epsilon : " + str(epsilon)
     start_time = time.time()
 
     main(inputData, hiddenNeurons, bias, iterations, testdata, weight, gamma, noise_d)
+    # main(inputData_xor, hiddenNeurons, bias, iterations, testdata_xor, weight, gamma, noise_d)
 
     time.sleep(0.5)
     done = True
 
 
-
-
-
+# TODO: sigmoid function factor
