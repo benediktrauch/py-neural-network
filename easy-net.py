@@ -19,17 +19,17 @@ import matplotlib.patches as mpatches
 # thanks to Andrew Clark on
 # https://stackoverflow.com/questions/22029562/python-how-to-make-simple-animated-loading-while-process-is-running
 def animate():
-    for c in itertools.cycle(['.', '..', '...', '   ']):  # ['|', '/', '-', '\\']
+    for c in itertools.cycle(['.', '..', '...', '                       ']):  # ['|', '/', '-', '\\']
         if done:
             break
-        sys.stdout.write("\rI'm  learning " + c)
+        sys.stdout.write("\r" + loading_message + c)  # ("\rI'm  learning " + c)
         sys.stdout.flush()
         time.sleep(0.5)
     sys.stdout.write('\rDone!                               ')
 
 
 # My net
-def main(x, hidden, b, learning, test, w, e, n_d):
+def main(x, hidden, b, learning, test, w, g, n_d):
     random.seed(1)
     training_data = x[:]
     noise_data = n_d[:]
@@ -52,9 +52,10 @@ def main(x, hidden, b, learning, test, w, e, n_d):
 
     sig_layer2 = []
 
+    global loading_message
+
     # learning loop (learning = iterations)
     for i in xrange(learning):
-
         # # # Forward pass
         # # Input Layer
 
@@ -91,7 +92,7 @@ def main(x, hidden, b, learning, test, w, e, n_d):
         delta_layer2 = [[]]
 
         for j in range(len(error[0])):
-            delta_layer2[0].append(deriv_sig_layer2[0][j] * error[0][j] * e)
+            delta_layer2[0].append(deriv_sig_layer2[0][j] * error[0][j] * g)
 
         # Delta for neurons in hidden layer
         deriv_sig_layer1 = matrix.derivative(sig_layer1)
@@ -106,7 +107,7 @@ def main(x, hidden, b, learning, test, w, e, n_d):
         for k in range(len(deriv_sig_layer1)):
             delta_layer1.append([])
             for j in range(len(deriv_sig_layer1[0])):
-                delta_layer1[k].append(deriv_sig_layer1[k][j] * delta_weight_sum[k][j] * e)
+                delta_layer1[k].append(deriv_sig_layer1[k][j] * delta_weight_sum[k][j] * g)
 
         delta_w_oh = matrix.multiply(delta_layer2, matrix.transpose(b_sig_layer1))
         delta_w_hi = matrix.multiply(delta_layer1, matrix.transpose(training_data))
@@ -116,7 +117,13 @@ def main(x, hidden, b, learning, test, w, e, n_d):
 
         synapses0 = matrix.add(synapses0, delta_w_hi)
 
-    # Testing net with noised data
+        if i > learning * 0.5:
+            if i > learning * 0.95:
+                loading_message = "I'm nearly done, good training "
+            else:
+                loading_message = "Ok, I'm halfway through "
+
+# Testing net with noised data
     sig_noise = []
     if len(n_d) > 0:
         # print "testing with noise data"
@@ -148,7 +155,7 @@ def main(x, hidden, b, learning, test, w, e, n_d):
     neuron_patch = mpatches.Patch(label='Neurons: '+str(hidden))
     bias_patch = mpatches.Patch(label='Bias: '+str(b))
     iteration_patch = mpatches.Patch(label='Iterations: '+str(learning))
-    epsilon_patch = mpatches.Patch(label='Epsilon: '+str(e))
+    epsilon_patch = mpatches.Patch(label='Epsilon: '+str(g))
     weight_patch = mpatches.Patch(label='Weight range (0 +/-): '+str(w))
     time_patch = mpatches.Patch(label=str(round((time.time() - start_time)/60, 2)) + " min")
     first_legend = plt.legend(handles=[bias_patch, time_patch, epsilon_patch, neuron_patch, iteration_patch, weight_patch],
@@ -160,7 +167,7 @@ def main(x, hidden, b, learning, test, w, e, n_d):
     line3, = plt.plot(x_data, y_data, label="sin(x)", linestyle='--', linewidth=0.75)
     ax = plt.gca().add_artist(first_legend)
     plt.legend(handles=[line1, line2, line3])
-    plt.savefig('./plots/plot'+str(time.time())+'.png')
+    plt.savefig('./plots/plot'+str(time.time())[2:10]+'.png')
 
     plt.clf()
     plt.cla()
@@ -181,11 +188,13 @@ noise_d = [tools.linspace(0.1, 6.5, 50)]
 x_data = inputData[0]
 y_data = np.sin(x_data)
 
-iterations = 50000
-hiddenNeurons = 13
+iterations = 250
+hiddenNeurons = 9
 bias = 1.
 weight = 0.95
-epsilon = 0.41
+gamma = 0.41
+
+loading_message = "I'm learning right now "
 
 for _ in range(1):
     done = False
@@ -196,9 +205,9 @@ for _ in range(1):
     # print "epsilon : " + str(epsilon)
     start_time = time.time()
 
-    main(inputData, hiddenNeurons, bias, iterations, testdata, weight, epsilon, noise_d)
+    main(inputData, hiddenNeurons, bias, iterations, testdata, weight, gamma, noise_d)
 
-    time.sleep(10)
+    time.sleep(0.5)
     done = True
 
 
