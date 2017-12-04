@@ -144,6 +144,7 @@ def main(x, hidden, b, learning, test, w, e, n_d):
         result2.append(sig_noise[0][i] * 2 - 1)
 
     # Plot
+    # Some code lines from: https://matplotlib.org/users/legend_guide.html
     neuron_patch = mpatches.Patch(label='Neurons: '+str(hidden))
     bias_patch = mpatches.Patch(label='Bias: '+str(b))
     iteration_patch = mpatches.Patch(label='Iterations: '+str(learning))
@@ -180,7 +181,7 @@ noise_d = [tools.linspace(0.1, 6.5, 50)]
 x_data = inputData[0]
 y_data = np.sin(x_data)
 
-iterations = 5000
+iterations = 50000
 hiddenNeurons = 13
 bias = 1.
 weight = 0.95
