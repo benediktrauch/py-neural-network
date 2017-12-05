@@ -37,6 +37,7 @@ def main(x, hidden, b, learning, test, w, g, n_d):
     # Adding bias to training data
     training_data.append([])
     noise_data.append([])
+
     for _ in x[0]:
         training_data[1].append(b)
         noise_data[1].append(b)
@@ -193,8 +194,8 @@ noise_d = [tools.linspace(0.1, 9.5, 94)]
 x_data = inputData[0]
 y_data = np.sin(x_data**np.cos(x_data))
 
-iterations = 150000
-hiddenNeurons = 11
+iterations = 10000
+hiddenNeurons = 9
 bias = 1.
 weight = 0.95
 gamma = 0.41

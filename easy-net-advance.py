@@ -22,10 +22,10 @@ def animate():
     for c in itertools.cycle(['.', '..', '...', '                       ']):  # ['|', '/', '-', '\\']
         if done:
             break
-        sys.stdout.write("\r" + loading_message + c)  # ("\rI'm  learning " + c)
+        sys.stdout.write("\r" + str(loading_progress) + "% - " + loading_message + c)  # ("\rI'm  learning " + c)
         sys.stdout.flush()
         time.sleep(0.5)
-    sys.stdout.write('\rDone!                               ')
+    sys.stdout.write('\rDone!                                       ')
 
 
 # My net
@@ -39,8 +39,8 @@ def main(x, hidden, b, learning, test, w, g, n_d, m):
     noise_data.append([])
 
     for _ in x[0]:
-        training_data[len(training_data) - 1].append(b)
-        noise_data[len(noise_data) - 1].append(b)
+        training_data[len(training_data)-1].append(b)
+        noise_data[len(noise_data)-1].append(b)
 
     # Random weights for synapses
     synapses0 = []
@@ -54,11 +54,13 @@ def main(x, hidden, b, learning, test, w, g, n_d, m):
         synapses1.append([random.uniform(w, -w)])
 
     sig_layer2 = []
-    td_index = 0
+
     global loading_message
+    global loading_progress
 
     # learning loop (learning = iterations)
     for i in xrange(learning):
+        loading_progress = round((float(i) / float(iterations)) * 100, 1)
         # # # Forward pass
         # # Input Layer
 
@@ -69,7 +71,6 @@ def main(x, hidden, b, learning, test, w, g, n_d, m):
 
         # # Hidden Layer
         # Adding bias to layer1
-
         b_sig_layer1 = sig_layer1[:]
 
         b_sig_layer1.append([])
@@ -116,39 +117,35 @@ def main(x, hidden, b, learning, test, w, g, n_d, m):
 
         if i > learning * 0.5:
             if i > learning * 0.95:
-                loading_message = "I'm nearly done, good training "
+                loading_message = "I'm nearly done, good training."
             else:
-                loading_message = "Ok, I'm halfway through "
+                loading_message = "Well, I'm halfway through."
 
         # # # End of learning
 
     # Testing net with noised data
+    sig_noise = []
     l1 = matrix.multiply(synapses0, noise_data)
-
     sig_l1 = matrix.sig(l1)
-
     b_sig_l1 = sig_l1[:]
-
     b_sig_l1.append([])
 
     for _ in b_sig_l1[0]:
         b_sig_l1[len(b_sig_l1) - 1].append(b)
 
     l2 = matrix.multiply(matrix.transpose(synapses1), b_sig_l1)
-
     sig_noise = matrix.sig(l2)
-
-    # formatting net output for plot
 
     print "\rLook what I've leaned:"
 
-    if m == "sin":
-        result1 = []  # training data
-        result2 = []  # noised data
-        for i in range(len(sig_layer2[0])):
-            result1.append(sig_layer2[0][i] * 2 - 1)
-            result2.append(sig_noise[0][i] * 2 - 1)
+    # formatting net output for plot
+    result1 = []  # training data
+    result2 = []  # noised data
+    for i in range(len(sig_layer2[0])):
+        result1.append(sig_layer2[0][i] * 2 - 1)
+        result2.append(sig_noise[0][i] * 2 - 1)
 
+    if m == "sin":
         # Plot
         # Some code lines from: https://matplotlib.org/users/legend_guide.html
         neuron_patch = mpatches.Patch(label='Neurons: ' + str(hidden))
@@ -167,7 +164,6 @@ def main(x, hidden, b, learning, test, w, g, n_d, m):
         line3, = plt.plot(x_data, y_data, label="sin(x)", linestyle='--', linewidth=0.75)
         ax = plt.gca().add_artist(first_legend)
         plt.legend(handles=[line1, line2, line3])
-
         # plt.savefig('./plots/plot' + str(time.time())[2:10] + '.png')
         plt.show()
 
@@ -178,36 +174,32 @@ def main(x, hidden, b, learning, test, w, g, n_d, m):
     elif m == "xor":
         for i in range(len(sig_noise[0])):
             print "Input: " + str(round(noise_data[0][i], 0)) + " & " \
-                  + str(round(noise_data[1][i], 0)) + " = " + str(round(sig_noise[0][i], 0))
+                  + str(round(noise_data[1][i], 0)) + " = " + str(round(sig_noise[0][i], 0)) + " (" \
+                  + str(round(sig_noise[0][i] * 100, 4)) + "%)"
 
 
-# Parameter and data section
 inputData_xor = [[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0]]
 testdata_xor = [[0.0], [1.0], [1.0], [0.0]]
 
 inputData = [tools.linspace(0, 6.4, 50)]  # 2 * math.pi
 
 testdata = []
-for data in range(len(inputData)):
+for data in range(len(inputData[0])):
     testdata.append([round((math.sin(inputData[0][data]) * 0.5) + 0.5, 8)])
-# print inputData
-# print inputData_xor
-
-# print testdata
-# print testdata_xor
 
 noise_d = [tools.linspace(0.1, 6.5, 50)]
 
 x_data = inputData[0]
 y_data = np.sin(x_data)
 
-iterations = 5000
+iterations = 15000
 hiddenNeurons = 9
 bias = 1.
 weight = 0.95
 gamma = 0.41
 
 loading_message = "I'm learning right now "
+loading_progress = 0.0
 
 for _ in range(1):
     mode = raw_input("What do you want to learn? (1 = SIN(), 2 = XOR) ")
@@ -227,6 +219,7 @@ for _ in range(1):
     start_time = time.time()
 
     main(inputData, hiddenNeurons, bias, iterations, testdata, weight, gamma, noise_d, mode)
+    # main(inputData_xor, hiddenNeurons, bias, iterations, testdata_xor, weight, gamma, noise_d)
 
     time.sleep(0.5)
     done = True
