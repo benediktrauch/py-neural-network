@@ -22,10 +22,10 @@ def animate():
     for c in itertools.cycle(['.', '..', '...', '                       ']):  # ['|', '/', '-', '\\']
         if done:
             break
-        sys.stdout.write("\r" + loading_message + c)  # ("\rI'm  learning " + c)
+        sys.stdout.write("\r" + str(loading_progress) + "% - " + loading_message + c)  # ("\rI'm  learning " + c)
         sys.stdout.flush()
         time.sleep(0.5)
-    sys.stdout.write('\rDone!                               ')
+    sys.stdout.write('\rDone!                                       ')
 
 
 # My net
@@ -53,9 +53,13 @@ def main(x, hidden, b, learning, test, w, g, n_d):
     sig_layer2 = []
 
     global loading_message
-
+    global loading_progress
     # learning loop (learning = iterations)
     for i in xrange(learning):
+        temp = i+1
+        loading_progress = round((float(temp) / float(iterations)) * 100, 1)
+
+        # loading_progress = (temp / learning) * 100
         # # # Forward pass
         # # Input Layer
 
@@ -119,11 +123,11 @@ def main(x, hidden, b, learning, test, w, g, n_d):
 
         if i > learning * 0.5:
             if i > learning * 0.95:
-                loading_message = "I'm nearly done, good training "
+                loading_message = "I'm nearly done, good training."
             else:
-                loading_message = "Ok, I'm halfway through "
+                loading_message = "Well, I'm halfway through."
 
-            # Testing net with noised data
+    # Testing net with noised data
     sig_noise = []
     if len(n_d) > 0:
         # print "testing with noise data"
@@ -178,30 +182,25 @@ def main(x, hidden, b, learning, test, w, g, n_d):
 inputData_xor = [[0, 0, 1], [0, 1, 1], [1, 0, 1], [1, 1, 1]]
 testdata_xor = [[0], [1], [1], [0]]
 
-inputData = [tools.linspace(0, 6.4, 50)]  # 2 * math.pi
+inputData = [tools.linspace(0, 9.4, 94)]  # 2 * math.pi # 0, 6.4, 50
 
 testdata = []
 for data in range(len(inputData[0])):
-    testdata.append([round((math.sin(inputData[0][data]) * 0.5) + 0.5, 8)])
+    testdata.append([round((math.sin(inputData[0][data]**round(math.cos(inputData[0][data]), 6)) * 0.5) + 0.5, 8)])
 
-# print inputData
-# print inputData_xor
-#
-# print testdata
-# print testdata_xor
-
-noise_d = [tools.linspace(0.1, 6.5, 50)]
+noise_d = [tools.linspace(0.1, 9.5, 94)]
 
 x_data = inputData[0]
-y_data = np.sin(x_data)
+y_data = np.sin(x_data**np.cos(x_data))
 
-iterations = 10000
-hiddenNeurons = 9
+iterations = 150000
+hiddenNeurons = 11
 bias = 1.
 weight = 0.95
 gamma = 0.41
 
-loading_message = "I'm learning right now "
+loading_message = "I'm learning right now."
+loading_progress = 0.0
 
 for _ in range(1):
     done = False

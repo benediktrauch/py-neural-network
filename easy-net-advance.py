@@ -29,7 +29,7 @@ def animate():
 
 
 # My net
-def main(x, hidden, b, learning, test, w, g, n_d):
+def main(x, hidden, b, learning, test, w, g, n_d, m):
     random.seed(1)
     training_data = x[:]
     noise_data = n_d[:]
@@ -37,16 +37,21 @@ def main(x, hidden, b, learning, test, w, g, n_d):
     # Adding bias to training data
     training_data.append([])
     noise_data.append([])
+
     for _ in x[0]:
         training_data[len(training_data)-1].append(b)
         noise_data[len(noise_data)-1].append(b)
+
+    print training_data
 
     # Random weights for synapses
     synapses0 = []
     synapses1 = []
 
-    for _ in range(hidden):
-        synapses0.append([random.uniform(w, -w), random.uniform(w, -w)])  # second rand for bias synapses
+    for f in range(hidden):
+        synapses0.append([])
+        for _ in range(len(training_data)):
+            synapses0[f].append(random.uniform(w, -w))  # second rand for bias synapses
     for j in range(hidden + 1):  # +1 for bias
         synapses1.append([random.uniform(w, -w)])
 
@@ -58,14 +63,6 @@ def main(x, hidden, b, learning, test, w, g, n_d):
     for i in xrange(learning):
         # # # Forward pass
         # # Input Layer
-
-        temp_array = []
-
-        temp_array.append(training_data[td_index])
-        temp_array.append(training_data[len(training_data) - 1])
-        training_data = temp_array
-        if td_index > len(training_data) - 2:
-            td_index = 0
 
         layer1 = matrix.multiply(synapses0, training_data)
 
@@ -87,15 +84,25 @@ def main(x, hidden, b, learning, test, w, g, n_d):
         sig_layer2 = matrix.sig(layer2)
 
         # Calculate net error
-        error = [matrix.subtract([test[td_index]], matrix.transpose(sig_layer2))]
 
-        print error
+        # if m == "xor":
+        #     error = [matrix.subtract([test[td_index]], matrix.transpose(sig_layer2))]
+        #     if i % 1000 == 0:
+        #         mean_error = 0
+        #         for i in range(len(error)):
+        #             mean_error += error[0][i]
+        #             # print mean_error/len(error)
+        #     td_index += 1
+        #     if td_index > len(training_data) - 2:
+        #         td_index = 0
+        # else:
 
-        # if i % 25000 == 0:
-        #     temp = 0
-        #     for j in range(len(error)):
-        #         temp += temp + error[0][j]
-        #     print i, temp
+        error = [matrix.subtract(test, matrix.transpose(sig_layer2))]
+        if i % 2500 == 0:
+            temp = 0
+            for j in range(len(error)):
+                temp += temp + error[0][j]
+            print i, temp
 
         # Delta for neuron in output layer (1 for each training data)
         deriv_sig_layer2 = matrix.derivative(sig_layer2)
@@ -133,67 +140,100 @@ def main(x, hidden, b, learning, test, w, g, n_d):
             else:
                 loading_message = "Ok, I'm halfway through "
 
-            # Testing net with noised data
-    sig_noise = []
-    if len(n_d) > 0:
-        # print "testing with noise data"
+                # # # End of learning
 
-        l1 = matrix.multiply(synapses0, noise_data)
+    # Testing net with noised data
+    if m == "sin":
+        sig_noise = []
+        if len(n_d) > 0:
+            # print "testing with noise data"
 
-        sig_l1 = matrix.sig(l1)
+            l1 = matrix.multiply(synapses0, noise_data)
 
-        b_sig_l1 = sig_l1[:]
+            sig_l1 = matrix.sig(l1)
 
-        b_sig_l1.append([])
+            b_sig_l1 = sig_l1[:]
 
-        for _ in b_sig_l1[0]:
-            b_sig_l1[len(b_sig_l1) - 1].append(b)
+            b_sig_l1.append([])
 
-        l2 = matrix.multiply(matrix.transpose(synapses1), b_sig_l1)
+            for _ in b_sig_l1[0]:
+                b_sig_l1[len(b_sig_l1) - 1].append(b)
 
-        sig_noise = matrix.sig(l2)
+            l2 = matrix.multiply(matrix.transpose(synapses1), b_sig_l1)
 
-    # formatting net output for plot
-    result1 = []  # training data
-    result2 = []  # noised data
-    for i in range(len(sig_layer2[0])):
-        result1.append(sig_layer2[0][i] * 2 - 1)
-        result2.append(sig_noise[0][i] * 2 - 1)
+            sig_noise = matrix.sig(l2)
 
-    # Plot
-    # Some code lines from: https://matplotlib.org/users/legend_guide.html
-    neuron_patch = mpatches.Patch(label='Neurons: ' + str(hidden))
-    bias_patch = mpatches.Patch(label='Bias: ' + str(b))
-    iteration_patch = mpatches.Patch(label='Iterations: ' + str(learning))
-    epsilon_patch = mpatches.Patch(label='Epsilon: ' + str(g))
-    weight_patch = mpatches.Patch(label='Weight range (0 +/-): ' + str(w))
-    time_patch = mpatches.Patch(label=str(round((time.time() - start_time) / 60, 2)) + " min")
-    first_legend = plt.legend(
-        handles=[bias_patch, time_patch, epsilon_patch, neuron_patch, iteration_patch, weight_patch],
-        bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
-        ncol=3, mode="expand", borderaxespad=0.)
+        # formatting net output for plot
+        result1 = []  # training data
+        result2 = []  # noised data
+        for i in range(len(sig_layer2[0])):
+            result1.append(sig_layer2[0][i] * 2 - 1)
+            result2.append(sig_noise[0][i] * 2 - 1)
 
-    line1, = plt.plot(inputData[0], result1, label="Training Data", linewidth=0.75)
-    line2, = plt.plot(inputData[0], result2, label="Test Data", linestyle=':', linewidth=0.75)
-    line3, = plt.plot(x_data, y_data, label="sin(x)", linestyle='--', linewidth=0.75)
-    ax = plt.gca().add_artist(first_legend)
-    plt.legend(handles=[line1, line2, line3])
-    plt.savefig('./plots/plot' + str(time.time())[2:10] + '.png')
+        # Plot
+        # Some code lines from: https://matplotlib.org/users/legend_guide.html
+        neuron_patch = mpatches.Patch(label='Neurons: ' + str(hidden))
+        bias_patch = mpatches.Patch(label='Bias: ' + str(b))
+        iteration_patch = mpatches.Patch(label='Iterations: ' + str(learning))
+        epsilon_patch = mpatches.Patch(label='Gamma: ' + str(g))
+        weight_patch = mpatches.Patch(label='Weight range (0 +/-): ' + str(w))
+        time_patch = mpatches.Patch(label=str(round((time.time() - start_time) / 60, 2)) + " min")
+        first_legend = plt.legend(
+            handles=[bias_patch, time_patch, epsilon_patch, neuron_patch, iteration_patch, weight_patch],
+            bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
+            ncol=3, mode="expand", borderaxespad=0.)
 
-    plt.clf()
-    plt.cla()
-    plt.close()
+        line1, = plt.plot(inputData[0], result1, label="Training Data", linewidth=0.75)
+        line2, = plt.plot(inputData[0], result2, label="Test Data", linestyle=':', linewidth=0.75)
+        line3, = plt.plot(x_data, y_data, label="sin(x)", linestyle='--', linewidth=0.75)
+        ax = plt.gca().add_artist(first_legend)
+        plt.legend(handles=[line1, line2, line3])
+        # plt.savefig('./plots/plot' + str(time.time())[2:10] + '.png')
+        plt.show()
+
+        plt.clf()
+        plt.cla()
+        plt.close()
+
+    elif m == "xor":
+        for i in range(len(noise_data)):
+            temp_array = []
+
+            temp_array.append(noise_data[i])
+            temp_array.append(noise_data[len(noise_data) - 1])
+            training_data = temp_array
+
+            layer1 = matrix.multiply(synapses0, training_data)
+
+            # Activation level
+            sig_layer1 = matrix.sig(layer1)
+
+            # # Hidden Layer
+            # Adding bias to layer1
+
+            b_sig_layer1 = sig_layer1[:]
+
+            b_sig_layer1.append([])
+
+            for _ in b_sig_layer1[0]:
+                b_sig_layer1[len(b_sig_layer1) - 1].append(b)
+
+            layer2 = matrix.multiply(matrix.transpose(synapses1), b_sig_layer1)
+
+            sig_layer2 = matrix.sig(layer2)
+
+            print sig_layer2
 
 
-inputData_xor = [[0, 0, 1.0], [0, 1.0, 1.0], [1.0, 0, 1.0], [1.0, 1.0, 1.0]]
-testdata_xor = [[0], [1.0], [1.0], [0]]
+# inputData_xor = [[0.0, 0.0, 1.0], [0.0, 1.0, 1.0], [1.0, 0.0, 1.0], [1.0, 1.0, 1.0]]
+inputData_xor = [[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0]]
+testdata_xor = [[0.0], [1.0], [1.0], [0.0]]
 
 inputData = [tools.linspace(0, 6.4, 50)]  # 2 * math.pi
 
 testdata = []
 for data in range(len(inputData[0])):
     testdata.append([round((math.sin(inputData[0][data]) * 0.5) + 0.5, 8)])
-
 # print inputData
 # print inputData_xor
 
@@ -205,7 +245,7 @@ noise_d = [tools.linspace(0.1, 6.5, 50)]
 x_data = inputData[0]
 y_data = np.sin(x_data)
 
-iterations = 10000
+iterations = 7500
 hiddenNeurons = 9
 bias = 1.
 weight = 0.95
@@ -214,20 +254,27 @@ gamma = 0.41
 loading_message = "I'm learning right now "
 
 for _ in range(1):
+    mode = raw_input("What do you want to learn? (1 = SIN(), 2 = XOR) ")
+    if mode == "1":
+        mode = "sin"
+    elif mode == "2":
+        mode = "xor"
+        inputData = matrix.transpose(inputData_xor)
+        testdata = testdata_xor
+        noise_d = inputData
+
     # done = False
     #
     # t = threading.Thread(target=animate)
     # t.start()
 
-    # epsilon += 0.01
-    # print "epsilon : " + str(epsilon)
     start_time = time.time()
 
-    main(inputData, hiddenNeurons, bias, iterations, testdata, weight, gamma, noise_d)
+    main(inputData, hiddenNeurons, bias, iterations, testdata, weight, gamma, noise_d, mode)
     # main(inputData_xor, hiddenNeurons, bias, iterations, testdata_xor, weight, gamma, noise_d)
 
-    # time.sleep(0.5)
-    # done = True
+    time.sleep(0.5)
+    done = True
 
 
 # TODO: sigmoid function factor
