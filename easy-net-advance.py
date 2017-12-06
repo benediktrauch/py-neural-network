@@ -54,7 +54,7 @@ def main(x, hidden, b, learning, test, w, g, n_d, m):
         synapses1.append([random.uniform(w, -w)])
 
     sig_layer2 = []
-
+    error_log = []
     global loading_message
     global loading_progress
 
@@ -84,6 +84,12 @@ def main(x, hidden, b, learning, test, w, g, n_d, m):
 
         # Calculate net error
         error = [matrix.subtract(test, matrix.transpose(sig_layer2))]
+        temp = 0
+        for j in range(len(error)):
+            temp += temp + error[0][j]
+        error_log.append(temp/len(error))
+
+
 
         # Delta for neuron in output layer (1 for each training data)
         deriv_sig_layer2 = matrix.derivative(sig_layer2)
@@ -159,13 +165,15 @@ def main(x, hidden, b, learning, test, w, g, n_d, m):
             bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
             ncol=3, mode="expand", borderaxespad=0.)
 
+        line4, = plt.plot(error_axis[0], error_log, label="Error", linewidth=0.5)
         line1, = plt.plot(inputData[0], result1, label="Training Data", linewidth=0.75)
         line2, = plt.plot(inputData[0], result2, label="Test Data", linestyle=':', linewidth=0.75)
         line3, = plt.plot(x_data, y_data, label="sin(x)", linestyle='--', linewidth=0.75)
+        line5, = plt.plot(x_axis, y_axis, label="Axis", linewidth=0.5)
         ax = plt.gca().add_artist(first_legend)
-        plt.legend(handles=[line1, line2, line3])
-        # plt.savefig('./plots/plot' + str(time.time())[2:10] + '.png')
+        plt.legend(handles=[line4, line1, line2, line3, line5])
         plt.show()
+        plt.savefig('./plots/plot' + str(time.time())[2:10] + '.png')
 
         plt.clf()
         plt.cla()
@@ -185,20 +193,28 @@ inputData = [tools.linspace(0, 6.4, 50)]  # 2 * math.pi
 
 testdata = []
 for data in range(len(inputData[0])):
+    # testdata.append([round((math.sin(inputData[0][data]**round(math.cos(inputData[0][data]), 6)) * 0.5) + 0.5, 8)])
     testdata.append([round((math.sin(inputData[0][data]) * 0.5) + 0.5, 8)])
 
 noise_d = [tools.linspace(0.1, 6.5, 50)]
+# noise_d = [tools.linspace(0.1, 9.5, 94)]
 
 x_data = inputData[0]
 y_data = np.sin(x_data)
+# y_data = np.sin(x_data**np.cos(x_data))
 
-iterations = 15000
+x_axis = [0, 6.4]
+y_axis = [0, 0]
+
+iterations = 25000
 hiddenNeurons = 9
 bias = 1.
 weight = 0.95
-gamma = 0.41
+gamma = 0.61
 
-loading_message = "I'm learning right now "
+error_axis = [tools.linspace(0, 6.4, iterations)]
+
+loading_message = "I'm learning right now."
 loading_progress = 0.0
 
 for _ in range(1):
