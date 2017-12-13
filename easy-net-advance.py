@@ -29,7 +29,7 @@ def animate():
 
 
 # My net
-def main(x, hidden, b, learning, test, w, g, n_d, m):
+def main(x, hidden, b, learning, training, w, g, n_d, m):
     random.seed(1)
     training_data = x[:]
     noise_data = n_d[:]
@@ -45,15 +45,20 @@ def main(x, hidden, b, learning, test, w, g, n_d, m):
     # Random weights for synapses
     synapses0 = []
     synapses1 = []
+    synapses2 = []
 
     for f in range(hidden):
         synapses0.append([])
         for _ in range(len(training_data)):
             synapses0[f].append(random.uniform(w, -w))  # second rand for bias synapses
-    for j in range(hidden + 1):  # +1 for bias
-        synapses1.append([random.uniform(w, -w)])
+    for g in range(hidden+1):
+        synapses1.append([])
+        for _ in range(hidden):
+            synapses1[g].append(random.uniform(w, -w))  # second rand for bias synapses
+    for h in range(hidden + 1):  # +1 for bias
+        synapses2.append([random.uniform(w, -w)])
 
-    sig_layer2 = []
+    sig_layer3 = []
     error_log = []
     global loading_message
     global loading_progress
@@ -62,7 +67,10 @@ def main(x, hidden, b, learning, test, w, g, n_d, m):
     for i in xrange(learning):
         loading_progress = round((float(i) / float(iterations)) * 100, 1)
         # # # Forward pass
+
+        # # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         # # Input Layer
+        # # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         layer1 = matrix.multiply(synapses0, training_data)
 
@@ -78,48 +86,83 @@ def main(x, hidden, b, learning, test, w, g, n_d, m):
         for _ in b_sig_layer1[0]:
             b_sig_layer1[len(b_sig_layer1) - 1].append(b)
 
+        # # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        # # Hidden Layer
+        # # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
         layer2 = matrix.multiply(matrix.transpose(synapses1), b_sig_layer1)
 
+        # Activation level
         sig_layer2 = matrix.sig(layer2)
 
+        # Adding bias to layer2
+        b_sig_layer2 = sig_layer2[:]
+
+        b_sig_layer2.append([])
+
+        for _ in b_sig_layer2[0]:
+            b_sig_layer2[len(b_sig_layer2) - 1].append(b)
+
+        # # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        # # Output layer
+        # # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+        layer3 = matrix.multiply(matrix.transpose(synapses2), b_sig_layer2)
+
+        sig_layer3 = matrix.sig(layer3)
+
+        # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         # Calculate net error
-        error = [matrix.subtract(test, matrix.transpose(sig_layer2))]
+        # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        error = [matrix.subtract(training, matrix.transpose(sig_layer3))]
         temp = 0
         for j in range(len(error)):
             temp += temp + error[0][j]
         error_log.append(temp/len(error))
 
-
-
+        # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         # Delta for neuron in output layer (1 for each training data)
-        deriv_sig_layer2 = matrix.derivative(sig_layer2)
-        delta_layer2 = [[]]
+        # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        deriv_sig_layer3 = matrix.derivative(sig_layer3)
+        delta_layer3 = [[]]
 
         for j in range(len(error[0])):
-            delta_layer2[0].append(deriv_sig_layer2[0][j] * error[0][j] * g)
+            delta_layer3[0].append(deriv_sig_layer3[0][j] * error[0][j] * g)
 
+        # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         # Delta for neurons in hidden layer
+        # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        deriv_sig_layer2 = matrix.derivative(sig_layer2)
+        delta_layer2 = []
+        delta_weight_sum2 = []
+
         deriv_sig_layer1 = matrix.derivative(sig_layer1)
         delta_layer1 = []
-        delta_weight_sum = []
+        delta_weight_sum1 = []
 
-        for k in range(len(synapses1)):
-            delta_weight_sum.append([])
-            for j in range(len(delta_layer2[0])):
-                delta_weight_sum[k].append(synapses1[k][0] * delta_layer2[0][j])
+        for k in range(len(synapses2)):
+            delta_weight_sum2.append([])
+            for j in range(len(delta_layer3[0])):
+                delta_weight_sum2[k].append(synapses2[k][0] * delta_layer3[0][j])
+
+        for k in range(len(deriv_sig_layer2)):
+            delta_layer2.append([])
+            for j in range(len(deriv_sig_layer2[0])):
+                delta_layer2[k].append(deriv_sig_layer2[k][j] * delta_weight_sum2[k][j] * g)
 
         for k in range(len(deriv_sig_layer1)):
             delta_layer1.append([])
             for j in range(len(deriv_sig_layer1[0])):
-                delta_layer1[k].append(deriv_sig_layer1[k][j] * delta_weight_sum[k][j] * g)
+                delta_layer1[k].append(deriv_sig_layer1[k][j] * delta_layer2[k][j] * g)
 
-        delta_w_oh = matrix.multiply(delta_layer2, matrix.transpose(b_sig_layer1))
-        delta_w_hi = matrix.multiply(delta_layer1, matrix.transpose(training_data))
+        delta_w_oh = matrix.multiply(delta_layer3, matrix.transpose(b_sig_layer2))
+        delta_w_hi2 = matrix.multiply(delta_layer2, matrix.transpose(b_sig_layer1))
+        delta_w_hi1 = matrix.multiply(delta_layer1, matrix.transpose(training_data))
 
         # # Update weights
-        synapses1 = matrix.add(synapses1, matrix.transpose(delta_w_oh))
-
-        synapses0 = matrix.add(synapses0, delta_w_hi)
+        synapses2 = matrix.add(synapses2, matrix.transpose(delta_w_oh))
+        synapses1 = matrix.add(synapses1, delta_w_hi2)
+        synapses0 = matrix.add(synapses0, delta_w_hi1)
 
         if i > learning * 0.5:
             if i > learning * 0.95:
@@ -128,6 +171,8 @@ def main(x, hidden, b, learning, test, w, g, n_d, m):
                 loading_message = "Well, I'm halfway through."
 
         # # # End of learning
+
+    return 0
 
     # Testing net with noised data
     sig_noise = []
@@ -147,8 +192,8 @@ def main(x, hidden, b, learning, test, w, g, n_d, m):
     # formatting net output for plot
     result1 = []  # training data
     result2 = []  # noised data
-    for i in range(len(sig_layer2[0])):
-        result1.append(sig_layer2[0][i] * 2 - 1)
+    for i in range(len(sig_layer3[0])):
+        result1.append(sig_layer3[0][i] * 2 - 1)
         result2.append(sig_noise[0][i] * 2 - 1)
 
     if m == "sin":
@@ -207,7 +252,7 @@ x_axis = [0, 6.4]
 y_axis = [0, 0]
 
 iterations = 25000
-hiddenNeurons = 9
+hiddenNeurons = 3
 bias = 1.
 weight = 0.95
 gamma = 0.61
