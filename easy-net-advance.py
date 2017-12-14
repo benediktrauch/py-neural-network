@@ -51,11 +51,11 @@ def main(x, hidden, b, learning, training, w, g, n_d, m):
         synapses0.append([])
         for _ in range(len(training_data)):
             synapses0[f].append(random.uniform(w, -w))  # second rand for bias synapses
-    for g in range(hidden+1):
+    for f in range(hidden+1):
         synapses1.append([])
         for _ in range(hidden):
-            synapses1[g].append(random.uniform(w, -w))  # second rand for bias synapses
-    for h in range(hidden + 1):  # +1 for bias
+            synapses1[f].append(random.uniform(w, -w))  # second rand for bias synapses
+    for f in range(hidden + 1):  # +1 for bias
         synapses2.append([random.uniform(w, -w)])
 
     sig_layer3 = []
@@ -132,12 +132,14 @@ def main(x, hidden, b, learning, training, w, g, n_d, m):
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         # Delta for neurons in hidden layer
         # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
         deriv_sig_layer2 = matrix.derivative(sig_layer2)
         delta_layer2 = []
-        delta_weight_sum2 = []
 
         deriv_sig_layer1 = matrix.derivative(sig_layer1)
         delta_layer1 = []
+
+        delta_weight_sum2 = []
         delta_weight_sum1 = []
 
         for k in range(len(synapses2)):
@@ -150,10 +152,15 @@ def main(x, hidden, b, learning, training, w, g, n_d, m):
             for j in range(len(deriv_sig_layer2[0])):
                 delta_layer2[k].append(deriv_sig_layer2[k][j] * delta_weight_sum2[k][j] * g)
 
+        for k in range(len(synapses1)):
+            delta_weight_sum1.append([])
+            for j in range(len(delta_layer2[0])):
+                delta_weight_sum1[k].append(synapses1[k][0] * delta_layer2[0][j])
+
         for k in range(len(deriv_sig_layer1)):
             delta_layer1.append([])
             for j in range(len(deriv_sig_layer1[0])):
-                delta_layer1[k].append(deriv_sig_layer1[k][j] * delta_layer2[k][j] * g)
+                delta_layer1[k].append(deriv_sig_layer1[k][j] * delta_weight_sum1[k][j] * g)
 
         delta_w_oh = matrix.multiply(delta_layer3, matrix.transpose(b_sig_layer2))
         delta_w_hi2 = matrix.multiply(delta_layer2, matrix.transpose(b_sig_layer1))
@@ -161,7 +168,7 @@ def main(x, hidden, b, learning, training, w, g, n_d, m):
 
         # # Update weights
         synapses2 = matrix.add(synapses2, matrix.transpose(delta_w_oh))
-        synapses1 = matrix.add(synapses1, delta_w_hi2)
+        synapses1 = matrix.add(synapses1,  matrix.transpose(delta_w_hi2))
         synapses0 = matrix.add(synapses0, delta_w_hi1)
 
         if i > learning * 0.5:
@@ -172,20 +179,24 @@ def main(x, hidden, b, learning, training, w, g, n_d, m):
 
         # # # End of learning
 
-    return 0
-
     # Testing net with noised data
     sig_noise = []
     l1 = matrix.multiply(synapses0, noise_data)
     sig_l1 = matrix.sig(l1)
     b_sig_l1 = sig_l1[:]
     b_sig_l1.append([])
-
     for _ in b_sig_l1[0]:
         b_sig_l1[len(b_sig_l1) - 1].append(b)
-
     l2 = matrix.multiply(matrix.transpose(synapses1), b_sig_l1)
-    sig_noise = matrix.sig(l2)
+    sig_l2 = matrix.sig(l2)
+    b_sig_l2 = sig_l2[:]
+    b_sig_l2.append([])
+    for _ in b_sig_l2[0]:
+        b_sig_l2[len(b_sig_l2) - 1].append(b)
+    l3 = matrix.multiply(matrix.transpose(synapses2), b_sig_l2)
+    sig_noise = matrix.sig(l3)
+
+    # ///////////////////////////////////////////////
 
     print "\rLook what I've leaned:"
 
