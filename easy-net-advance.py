@@ -196,8 +196,6 @@ def main(x, hidden, b, learning, training, w, g, n_d, m):
     l3 = matrix.multiply(matrix.transpose(synapses2), b_sig_l2)
     sig_noise = matrix.sig(l3)
 
-    # ///////////////////////////////////////////////
-
     print "\rLook what I've leaned:"
 
     # formatting net output for plot
@@ -229,7 +227,7 @@ def main(x, hidden, b, learning, training, w, g, n_d, m):
         ax = plt.gca().add_artist(first_legend)
         plt.legend(handles=[line4, line1, line2, line3, line5])
         plt.show()
-        plt.savefig('./plots/plot' + str(time.time())[2:10] + '.png')
+        # plt.savefig('./plots/plot' + str(time.time())[2:10] + '.png')
 
         plt.clf()
         plt.cla()
@@ -246,6 +244,7 @@ inputData_xor = [[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0]]
 testdata_xor = [[0.0], [1.0], [1.0], [0.0]]
 
 inputData = [tools.linspace(0, 6.4, 50)]  # 2 * math.pi
+# inputData = [tools.linspace(0.0, 9.4, 94)]
 
 testdata = []
 for data in range(len(inputData[0])):
@@ -262,8 +261,8 @@ y_data = np.sin(x_data)
 x_axis = [0, 6.4]
 y_axis = [0, 0]
 
-iterations = 25000
-hiddenNeurons = 3
+iterations = 15000
+hiddenNeurons = 12
 bias = 1.
 weight = 0.95
 gamma = 0.61
