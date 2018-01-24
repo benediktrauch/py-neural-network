@@ -84,12 +84,11 @@ def main(x, hidden, b, learning, test, w, g, n_d, m):
 
         # Calculate net error
         error = [matrix.subtract(test, matrix.transpose(sig_layer2))]
+        error = [matrix.subtract(test, matrix.transpose(sig_layer2))]
         temp = 0
         for j in range(len(error)):
             temp += temp + error[0][j]
         error_log.append(temp/len(error))
-
-
 
         # Delta for neuron in output layer (1 for each training data)
         deriv_sig_layer2 = matrix.derivative(sig_layer2)
@@ -206,11 +205,11 @@ y_data = np.sin(x_data)
 x_axis = [0, 6.4]
 y_axis = [0, 0]
 
-iterations = 25000
+iterations = 100000
 hiddenNeurons = 9
 bias = 1.
 weight = 0.95
-gamma = 0.61
+gamma = 0.63
 
 error_axis = [tools.linspace(0, 6.4, iterations)]
 
