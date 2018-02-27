@@ -28,8 +28,8 @@ def animate():
     sys.stdout.write('\rDone!                                       ')
 
 
-# My net
-def main(x, hidden, b, learning, test, w, g, n_d, m, p_m):
+# My net (inputData, hiddenNeurons, bias, iterations, testdata, weight, gamma, noise_d, mode, plot)
+def main(x, hidden, b, epochs, test, w, g, n_d, m, p_m):
     random.seed(1)
     training_data = x[:]
     noise_data = n_d[:]
@@ -61,7 +61,7 @@ def main(x, hidden, b, learning, test, w, g, n_d, m, p_m):
     global loading_progress
 
     # learning loop (learning = iterations)
-    for i in xrange(learning):
+    for i in xrange(epochs):
         loading_progress = round((float(i) / float(iterations)) * 100, 1)
 
         # # # Forward pass
@@ -84,7 +84,8 @@ def main(x, hidden, b, learning, test, w, g, n_d, m, p_m):
 
         sig_layer2 = matrix.sig(layer2)
 
-        # Calculate net error
+        # # # ----------------
+        # # Calculate net error
         error = [matrix.subtract(test, matrix.transpose(sig_layer2))]
         # error = [matrix.error(test, matrix.transpose(sig_layer2))]
         # if i % 5000 == 0:
@@ -117,6 +118,8 @@ def main(x, hidden, b, learning, test, w, g, n_d, m, p_m):
 
         error_log2.append(temp2 / len(error2))
 
+        # # # ----------------
+        # # Calculating weight updates
         # Delta for neuron in output layer (1 for each training data)
         deriv_sig_layer2 = matrix.derivative(sig_layer2)
         delta_layer2 = [[]]
@@ -145,13 +148,14 @@ def main(x, hidden, b, learning, test, w, g, n_d, m, p_m):
         delta_w_oh = matrix.multiply(delta_layer2, matrix.transpose(b_sig_layer1))
         delta_w_hi = matrix.multiply(delta_layer1, matrix.transpose(training_data))
 
+        # # # Backwards pass
         # # Update weights
         synapses1 = matrix.add(synapses1, matrix.transpose(delta_w_oh))
 
         synapses0 = matrix.add(synapses0, delta_w_hi)
 
-        if i > learning * 0.5:
-            if i > learning * 0.95:
+        if i > epochs * 0.5:
+            if i > epochs * 0.95:
                 loading_message = "I'm nearly done, good training."
             else:
                 loading_message = "Well, I'm halfway through."
@@ -183,7 +187,7 @@ def main(x, hidden, b, learning, test, w, g, n_d, m, p_m):
         # Some code lines from: https://matplotlib.org/users/legend_guide.html
         neuron_patch = mpatches.Patch(label='Neurons: ' + str(hidden))
         bias_patch = mpatches.Patch(label='Bias: ' + str(b))
-        iteration_patch = mpatches.Patch(label='Iterations: ' + str(learning))
+        iteration_patch = mpatches.Patch(label='Iterations: ' + str(epochs))
         epsilon_patch = mpatches.Patch(label='Gamma: ' + str(g))
         weight_patch = mpatches.Patch(label='Weight range: +/- ' + str(w))
         time_patch = mpatches.Patch(label=str(round((time.time() - start_time) / 60, 2)) + " min")
@@ -224,7 +228,7 @@ testdata_xor = [[0.0], [1.0], [1.0], [0.0]]
 end = 6.4
 lin = 32
 
-## Training Data
+# # Training Data
 # inputData = [tools.linspace(0, 6.4, 50)]  # 2 * math.pi
 inputData = [tools.linspace(0, end, lin)]  # 2 * math.pi
 
@@ -243,15 +247,14 @@ y_data = np.sin(x_data)
 x_axis = [0, end]
 y_axis = [0, 0]
 
-## SIN 50000 / 8200
-## XOR  4000
+# # SIN 50000 / 8200
+# # XOR  4000
 iterations = 50000
 hiddenNeurons = 9
 bias = 1.
 weight = 0.5
 # gamma = 0.625
 gamma = 0.25
-# gamma = 0.95
 
 plot = False
 
