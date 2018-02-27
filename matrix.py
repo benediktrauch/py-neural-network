@@ -1,3 +1,6 @@
+import math
+
+
 # Sigmoid derivative helper function
 def sigmoid_derivative(x):
     return x*(1-x)
@@ -5,7 +8,8 @@ def sigmoid_derivative(x):
 
 # Sigmoid helper function
 def sigmoid(x):
-    temp = 1/(1+exp(-x))
+    # temp = 1/(1+exp(-x))
+    temp = 1/(1+math.exp(-x))
     return temp
 
 
@@ -88,6 +92,20 @@ def subtract(matrix1, matrix2):
     for i in range(len(matrix1)):
         for j in range(len(matrix1[0])):
             result.append(matrix1[i][j] - matrix2[i][j])
+    return result
+
+
+# Calculate quadratic error
+def error(matrix1, matrix2):
+    result = []
+
+    if len(matrix1) == 1:
+        for _ in range(len(matrix2) - 1):
+            matrix1.append(matrix1[0])
+    else:
+        for i in range(len(matrix1)):
+            for j in range(len(matrix1[0])):
+                result.append((matrix1[i][j] - matrix2[i][j])*(matrix1[i][j] - matrix2[i][j])/2)
     return result
 
 

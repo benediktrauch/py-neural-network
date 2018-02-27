@@ -19,7 +19,7 @@ import matplotlib.patches as mpatches
 # thanks to Andrew Clark on
 # https://stackoverflow.com/questions/22029562/python-how-to-make-simple-animated-loading-while-process-is-running
 def animate():
-    for c in itertools.cycle(['.', '..', '...', '                       ']):  # ['|', '/', '-', '\\']
+    for c in itertools.cycle(['.', '..', '                       ']):  # ['|', '/', '-', '\\']
         if done:
             break
         sys.stdout.write("\r" + str(loading_progress) + "% - " + loading_message + c)  # ("\rI'm  learning " + c)
@@ -29,7 +29,7 @@ def animate():
 
 
 # My net
-def main(x, hidden, b, learning, test, w, g, n_d, m):
+def main(x, hidden, b, learning, test, w, g, n_d, m, p_m):
     random.seed(1)
     training_data = x[:]
     noise_data = n_d[:]
@@ -55,15 +55,17 @@ def main(x, hidden, b, learning, test, w, g, n_d, m):
 
     sig_layer2 = []
     error_log = []
+    error_log2 = []
+    gamma_log = []
     global loading_message
     global loading_progress
 
     # learning loop (learning = iterations)
     for i in xrange(learning):
         loading_progress = round((float(i) / float(iterations)) * 100, 1)
+
         # # # Forward pass
         # # Input Layer
-
         layer1 = matrix.multiply(synapses0, training_data)
 
         # Activation level
@@ -84,15 +86,43 @@ def main(x, hidden, b, learning, test, w, g, n_d, m):
 
         # Calculate net error
         error = [matrix.subtract(test, matrix.transpose(sig_layer2))]
-        error = [matrix.subtract(test, matrix.transpose(sig_layer2))]
+        # error = [matrix.error(test, matrix.transpose(sig_layer2))]
+        # if i % 5000 == 0:
+        #     print(error)
+
         temp = 0
         for j in range(len(error)):
             temp += temp + error[0][j]
+
         error_log.append(temp/len(error))
+
+        # Test with test data
+        sig_noise = []
+        l1 = matrix.multiply(synapses0, noise_data)
+        sig_l1 = matrix.sig(l1)
+        b_sig_l1 = sig_l1[:]
+        b_sig_l1.append([])
+
+        for _ in b_sig_l1[0]:
+            b_sig_l1[len(b_sig_l1) - 1].append(b)
+
+        l2 = matrix.multiply(matrix.transpose(synapses1), b_sig_l1)
+        sig_noise = matrix.sig(l2)
+
+        error2 = [matrix.subtract(test, matrix.transpose(sig_noise))]
+
+        temp2 = 0
+        for j in range(len(error2)):
+            temp2 += temp2 + error2[0][j]
+
+        error_log2.append(temp2 / len(error2))
 
         # Delta for neuron in output layer (1 for each training data)
         deriv_sig_layer2 = matrix.derivative(sig_layer2)
         delta_layer2 = [[]]
+
+        # temp_g = (g/(i+1))
+        # gamma_log.append(temp_g)
 
         for j in range(len(error[0])):
             delta_layer2[0].append(deriv_sig_layer2[0][j] * error[0][j] * g)
@@ -128,7 +158,7 @@ def main(x, hidden, b, learning, test, w, g, n_d, m):
 
         # # # End of learning
 
-    # Testing net with noised data
+    # Testing net with noised/test data
     sig_noise = []
     l1 = matrix.multiply(synapses0, noise_data)
     sig_l1 = matrix.sig(l1)
@@ -140,8 +170,6 @@ def main(x, hidden, b, learning, test, w, g, n_d, m):
 
     l2 = matrix.multiply(matrix.transpose(synapses1), b_sig_l1)
     sig_noise = matrix.sig(l2)
-
-    print "\rLook what I've leaned:"
 
     # formatting net output for plot
     result1 = []  # training data
@@ -157,7 +185,7 @@ def main(x, hidden, b, learning, test, w, g, n_d, m):
         bias_patch = mpatches.Patch(label='Bias: ' + str(b))
         iteration_patch = mpatches.Patch(label='Iterations: ' + str(learning))
         epsilon_patch = mpatches.Patch(label='Gamma: ' + str(g))
-        weight_patch = mpatches.Patch(label='Weight range (0 +/-): ' + str(w))
+        weight_patch = mpatches.Patch(label='Weight range: +/- ' + str(w))
         time_patch = mpatches.Patch(label=str(round((time.time() - start_time) / 60, 2)) + " min")
         first_legend = plt.legend(
             handles=[bias_patch, time_patch, epsilon_patch, neuron_patch, iteration_patch, weight_patch],
@@ -165,79 +193,97 @@ def main(x, hidden, b, learning, test, w, g, n_d, m):
             ncol=3, mode="expand", borderaxespad=0.)
 
         line4, = plt.plot(error_axis[0], error_log, label="Error", linewidth=0.5)
+        line6, = plt.plot(error_axis[0], error_log2, label="Error2", linewidth=0.5)
         line1, = plt.plot(inputData[0], result1, label="Training Data", linewidth=0.75)
         line2, = plt.plot(inputData[0], result2, label="Test Data", linestyle=':', linewidth=0.75)
         line3, = plt.plot(x_data, y_data, label="sin(x)", linestyle='--', linewidth=0.75)
         line5, = plt.plot(x_axis, y_axis, label="Axis", linewidth=0.5)
         ax = plt.gca().add_artist(first_legend)
-        plt.legend(handles=[line4, line1, line2, line3, line5])
-        plt.show()
-        plt.savefig('./plots/plot' + str(time.time())[2:10] + '.png')
+        plt.legend(handles=[line4, line1, line2, line3, line5, line6])
+
+        if p_m:
+            plt.savefig('./plots/' + str(time.time())[2:10] + '.png')
+        else:
+            plt.show()
 
         plt.clf()
         plt.cla()
         plt.close()
 
     elif m == "xor":
+        print("-----")
         for i in range(len(sig_noise[0])):
             print "Input: " + str(round(noise_data[0][i], 0)) + " & " \
                   + str(round(noise_data[1][i], 0)) + " = " + str(round(sig_noise[0][i], 0)) + " (" \
-                  + str(round(sig_noise[0][i] * 100, 4)) + "%)"
+                  + str(round(sig_noise[0][i] * 100, 4)) + "% for True)"
 
 
 inputData_xor = [[0.0, 0.0], [0.0, 1.0], [1.0, 0.0], [1.0, 1.0]]
 testdata_xor = [[0.0], [1.0], [1.0], [0.0]]
 
-inputData = [tools.linspace(0, 6.4, 50)]  # 2 * math.pi
+end = 6.4
+lin = 32
+
+## Training Data
+# inputData = [tools.linspace(0, 6.4, 50)]  # 2 * math.pi
+inputData = [tools.linspace(0, end, lin)]  # 2 * math.pi
 
 testdata = []
 for data in range(len(inputData[0])):
     # testdata.append([round((math.sin(inputData[0][data]**round(math.cos(inputData[0][data]), 6)) * 0.5) + 0.5, 8)])
     testdata.append([round((math.sin(inputData[0][data]) * 0.5) + 0.5, 8)])
 
-noise_d = [tools.linspace(0.1, 6.5, 50)]
+noise_d = [tools.linspace(0.1, end+0.1, lin)]
 # noise_d = [tools.linspace(0.1, 9.5, 94)]
 
 x_data = inputData[0]
 y_data = np.sin(x_data)
 # y_data = np.sin(x_data**np.cos(x_data))
 
-x_axis = [0, 6.4]
+x_axis = [0, end]
 y_axis = [0, 0]
 
-iterations = 100000
+## SIN 50000 / 8200
+## XOR  4000
+iterations = 50000
 hiddenNeurons = 9
 bias = 1.
-weight = 0.95
-gamma = 0.63
+weight = 0.5
+# gamma = 0.625
+gamma = 0.25
+# gamma = 0.95
+
+plot = False
 
 error_axis = [tools.linspace(0, 6.4, iterations)]
 
 loading_message = "I'm learning right now."
 loading_progress = 0.0
 
-for _ in range(1):
-    mode = raw_input("What do you want to learn? (1 = SIN(), 2 = XOR) ")
-    if mode == "1":
-        mode = "sin"
-    elif mode == "2":
-        mode = "xor"
-        inputData = matrix.transpose(inputData_xor)
-        testdata = testdata_xor
-        noise_d = inputData
+for _ in range(100):
+    for _ in range(1):
+        mode = raw_input("What do you want to learn? (1 = SIN(), 2 = XOR) ")
+        if mode == "1":
+            mode = "sin"
+            plot_mode = raw_input("Save Plot? (1 = save plot, 2 = show plot) ")
+            if plot_mode == "1":
+                plot = True
+        elif mode == "2":
+            mode = "xor"
+            inputData = matrix.transpose(inputData_xor)
+            testdata = testdata_xor
+            noise_d = inputData
 
-    done = False
+        # gamma += 0.001
 
-    t = threading.Thread(target=animate)
-    t.start()
+        done = False
 
-    start_time = time.time()
+        t = threading.Thread(target=animate)
+        t.start()
 
-    main(inputData, hiddenNeurons, bias, iterations, testdata, weight, gamma, noise_d, mode)
-    # main(inputData_xor, hiddenNeurons, bias, iterations, testdata_xor, weight, gamma, noise_d)
+        start_time = time.time()
 
-    time.sleep(0.5)
-    done = True
+        main(inputData, hiddenNeurons, bias, iterations, testdata, weight, gamma, noise_d, mode, plot)
 
-
-# TODO: sigmoid function factor
+        time.sleep(0.5)
+        done = True
